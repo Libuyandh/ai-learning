@@ -1,0 +1,780 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI 闯关学习扩展原型</title>
+  <style>
+    :root {
+      --bg: #f4f8fb;
+      --surface: #ffffff;
+      --surface-soft: #f8fbfd;
+      --text: #172033;
+      --muted: #6a778b;
+      --line: #e4ebf2;
+      --primary: #17b8bc;
+      --primary-dark: #07949f;
+      --blue: #356bff;
+      --reward: #f7b731;
+      --reward-soft: #fff4d4;
+      --success: #158a55;
+      --success-soft: #e6f8ef;
+      --danger: #cf3e4f;
+      --danger-soft: #fff0f2;
+      --shadow: 0 16px 40px rgba(31, 62, 91, .1);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        linear-gradient(140deg, rgba(23, 184, 188, .12), transparent 34%),
+        linear-gradient(320deg, rgba(247, 183, 49, .16), transparent 38%),
+        var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+      line-height: 1.5;
+    }
+
+    .page {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 32px 0 40px;
+    }
+
+    .board-title {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .board-title h1 {
+      margin: 0;
+      font-size: clamp(24px, 4vw, 36px);
+      line-height: 1.15;
+      letter-spacing: 0;
+    }
+
+    .board-title p {
+      margin: 8px 0 0;
+      max-width: 620px;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .legend {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 36px;
+      padding: 0 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .76);
+      color: var(--primary-dark);
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 22px;
+    }
+
+    .frame {
+      min-width: 0;
+    }
+
+    .frame-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 32px;
+      margin-bottom: 10px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .phone {
+      position: relative;
+      overflow: hidden;
+      width: 100%;
+      max-width: 360px;
+      min-height: 680px;
+      margin: 0 auto;
+      border: 1px solid rgba(151, 169, 188, .35);
+      border-radius: 30px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .phone-inner {
+      display: flex;
+      min-height: 680px;
+      flex-direction: column;
+      padding: 18px 18px 20px;
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 26px;
+      margin-bottom: 12px;
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .signal {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .battery {
+      width: 24px;
+      height: 11px;
+      border: 1.5px solid var(--text);
+      border-radius: 4px;
+      padding: 2px;
+    }
+
+    .battery::before {
+      display: block;
+      width: 65%;
+      height: 100%;
+      border-radius: 2px;
+      background: var(--text);
+      content: "";
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 44px;
+      margin-bottom: 14px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      font-weight: 900;
+    }
+
+    .brand-mark,
+    .icon-btn {
+      display: inline-grid;
+      place-items: center;
+      flex: none;
+    }
+
+    .brand-mark {
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--primary), var(--blue));
+      color: #fff;
+      box-shadow: 0 8px 18px rgba(23, 184, 188, .28);
+    }
+
+    .icon-btn {
+      width: 44px;
+      height: 44px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--surface);
+      color: var(--text);
+    }
+
+    svg {
+      width: 20px;
+      height: 20px;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 25px;
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+
+    h3 {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.3;
+      letter-spacing: 0;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 30px;
+      padding: 0 10px;
+      border-radius: 999px;
+      background: #eef5ff;
+      color: #2856b8;
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .pill.reward {
+      background: var(--reward-soft);
+      color: #8a5b00;
+    }
+
+    .pill.good {
+      background: var(--success-soft);
+      color: var(--success);
+    }
+
+    .pill.bad {
+      background: var(--danger-soft);
+      color: var(--danger);
+    }
+
+    .primary-btn,
+    .ghost-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      min-height: 50px;
+      border-radius: 16px;
+      font-size: 15px;
+      font-weight: 900;
+    }
+
+    button {
+      font-family: inherit;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    button:active {
+      transform: scale(.985);
+    }
+
+    button:focus-visible {
+      outline: 3px solid rgba(53, 107, 255, .35);
+      outline-offset: 2px;
+    }
+
+    .primary-btn {
+      border: 0;
+      background: linear-gradient(135deg, var(--primary), var(--blue));
+      color: #fff;
+      box-shadow: 0 12px 24px rgba(23, 128, 188, .25);
+    }
+
+    .ghost-btn {
+      border: 1px solid var(--line);
+      background: var(--surface);
+      color: var(--text);
+    }
+
+    .bottom {
+      margin-top: auto;
+      padding-top: 16px;
+    }
+
+    .hero,
+    .panel {
+      display: grid;
+      gap: 12px;
+      padding: 18px;
+      border-radius: 20px;
+      background: var(--surface-soft);
+      border: 1px solid var(--line);
+    }
+
+    .hero {
+      background: linear-gradient(135deg, #e8fbfb, #f7f3ff 56%, #fff7dd);
+      border-color: rgba(23, 184, 188, .15);
+    }
+
+    .list {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .list-item {
+      display: grid;
+      gap: 8px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--surface);
+      font-size: 13px;
+    }
+
+    .row,
+    .split,
+    .record-head,
+    .quota-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .progress {
+      overflow: hidden;
+      height: 10px;
+      border-radius: 999px;
+      background: #e8eef5;
+    }
+
+    .progress span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--primary), var(--blue));
+    }
+
+    .score {
+      font-size: 38px;
+      line-height: 1;
+      font-weight: 950;
+    }
+
+    .wrong-card {
+      display: grid;
+      gap: 12px;
+      padding: 16px;
+      border: 1px solid rgba(207, 62, 79, .3);
+      border-radius: 20px;
+      background: var(--danger-soft);
+    }
+
+    .choice {
+      display: grid;
+      grid-template-columns: 30px 1fr;
+      align-items: center;
+      gap: 10px;
+      min-height: 52px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--surface);
+      color: var(--text);
+      text-align: left;
+      font-size: 14px;
+      font-weight: 750;
+    }
+
+    .choice strong {
+      display: grid;
+      place-items: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 10px;
+      background: #eef5ff;
+      color: var(--blue);
+    }
+
+    .choice.good {
+      border-color: rgba(21, 138, 85, .3);
+      background: var(--success-soft);
+    }
+
+    .choice.bad {
+      border-color: rgba(207, 62, 79, .3);
+      background: #fff7f8;
+    }
+
+    .mode-grid,
+    .source-grid,
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .mode,
+    .source,
+    .stat {
+      min-height: 92px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--surface);
+    }
+
+    .mode.active,
+    .source.active {
+      border-color: rgba(23, 184, 188, .45);
+      background: #e9fbfb;
+    }
+
+    .upload {
+      display: grid;
+      place-items: center;
+      gap: 10px;
+      min-height: 130px;
+      margin-top: 14px;
+      border: 1.5px dashed rgba(23, 184, 188, .45);
+      border-radius: 20px;
+      background: #f1fdfd;
+      text-align: center;
+    }
+
+    .empty {
+      display: grid;
+      place-items: center;
+      gap: 14px;
+      min-height: 300px;
+      text-align: center;
+    }
+
+    .empty-visual {
+      display: grid;
+      place-items: center;
+      width: 104px;
+      height: 104px;
+      border-radius: 32px;
+      background: linear-gradient(135deg, #e9fbfb, #fff4d4);
+      color: var(--primary-dark);
+    }
+
+    .empty-visual svg {
+      width: 44px;
+      height: 44px;
+    }
+
+    .quota {
+      display: grid;
+      gap: 14px;
+      padding: 20px;
+      border-radius: 24px;
+      background: linear-gradient(145deg, #102b43, #106f78);
+      color: #fff;
+    }
+
+    .plan {
+      display: grid;
+      gap: 8px;
+      padding: 14px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, .14);
+      border: 1px solid rgba(255, 255, 255, .24);
+    }
+
+    .nav {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 14px;
+      padding: 8px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--surface-soft);
+    }
+
+    .nav button {
+      min-height: 42px;
+      border: 0;
+      border-radius: 13px;
+      background: transparent;
+      color: var(--muted);
+      font-weight: 850;
+    }
+
+    .nav button.active {
+      background: var(--surface);
+      color: var(--primary-dark);
+      box-shadow: 0 8px 18px rgba(31, 62, 91, .08);
+    }
+
+    @media (max-width: 980px) {
+      .grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 680px) {
+      .page {
+        width: min(100% - 20px, 380px);
+        padding: 20px 0 28px;
+      }
+
+      .board-title {
+        display: block;
+      }
+
+      .legend {
+        margin-top: 12px;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .phone {
+        max-width: none;
+        min-height: 640px;
+      }
+
+      .phone-inner {
+        min-height: 640px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="board-title">
+      <div>
+        <h1>AI 闯关学习扩展原型</h1>
+        <p>学习记录、错题回看、二刷练习、输入增强、状态页和额度提示。</p>
+      </div>
+      <span class="legend">扩展功能</span>
+    </header>
+
+    <section class="grid" aria-label="扩展功能页面">
+      <article class="frame">
+        <div class="frame-label"><span>01 学习记录</span><span>History</span></div>
+        <div class="phone">
+          <div class="phone-inner">
+            <div class="status"><span>9:41</span><span class="signal"><span>5G</span><span class="battery"></span></span></div>
+            <div class="topbar">
+              <div class="brand">
+                <span class="brand-mark"><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16M8 16v-5M12 16V8M16 16v-7"/></svg></span>
+                <span>学习记录</span>
+              </div>
+              <button class="icon-btn" aria-label="筛选"><svg viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></svg></button>
+            </div>
+            <section class="hero">
+              <span class="pill reward">本周 5 次学习</span>
+              <h2>继续你的闯关进度</h2>
+              <p class="muted">最近一次学习停在错题复盘，可直接二刷。</p>
+            </section>
+            <div class="stat-grid">
+              <div class="stat"><span class="muted">总闯关</span><div class="score">42</div></div>
+              <div class="stat"><span class="muted">平均正确率</span><div class="score">81%</div></div>
+            </div>
+            <div class="list">
+              <div class="list-item">
+                <div class="record-head"><b>光合作用基础</b><span class="pill good">88 分</span></div>
+                <p class="muted">8 题 · 4 分钟前 · 1 道错题</p>
+              </div>
+              <div class="list-item">
+                <div class="record-head"><b>牛顿运动定律</b><span class="pill">76 分</span></div>
+                <p class="muted">10 题 · 昨天 · 3 个薄弱点</p>
+              </div>
+              <div class="list-item">
+                <div class="record-head"><b>英语从句识别</b><span class="pill reward">连学</span></div>
+                <p class="muted">6 题 · 周一 · 可继续练习</p>
+              </div>
+            </div>
+            <nav class="nav" aria-label="底部导航">
+              <button class="active">记录</button>
+              <button>错题</button>
+              <button>我的</button>
+            </nav>
+          </div>
+        </div>
+      </article>
+
+      <article class="frame">
+        <div class="frame-label"><span>02 错题回看</span><span>Review</span></div>
+        <div class="phone">
+          <div class="phone-inner">
+            <div class="status"><span>9:41</span><span class="signal"><span>5G</span><span class="battery"></span></span></div>
+            <div class="topbar">
+              <button class="icon-btn" aria-label="返回"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+              <span class="pill bad">错题 1 / 5</span>
+              <button class="icon-btn" aria-label="收藏"><svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
+            </div>
+            <section class="wrong-card">
+              <span class="pill bad">薄弱点：物质输入</span>
+              <h3>光合作用需要的原料主要是什么？</h3>
+              <button class="choice bad"><strong>A</strong><span>氧气和葡萄糖</span></button>
+              <button class="choice good"><strong>B</strong><span>二氧化碳和水</span></button>
+            </section>
+            <div class="list">
+              <div class="list-item"><b>错因分析</b><p class="muted">把产物和原料混淆。氧气是释放结果，不是主要输入。</p></div>
+              <div class="list-item"><b>记忆提示</b><p class="muted">输入：二氧化碳 + 水 + 光能；输出：有机物 + 氧气。</p></div>
+            </div>
+            <div class="bottom">
+              <button class="primary-btn"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7M21 3v6h-6"/></svg>加入二刷练习</button>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="frame">
+        <div class="frame-label"><span>03 二刷练习</span><span>Practice</span></div>
+        <div class="phone">
+          <div class="phone-inner">
+            <div class="status"><span>9:41</span><span class="signal"><span>5G</span><span class="battery"></span></span></div>
+            <div class="topbar">
+              <div class="brand">
+                <span class="brand-mark"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7M21 3v6h-6"/></svg></span>
+                <span>二刷练习</span>
+              </div>
+              <span class="pill reward">推荐</span>
+            </div>
+            <section class="hero">
+              <h2>针对薄弱点再闯一次</h2>
+              <p class="muted">AI 将围绕 2 个薄弱知识点生成短练习。</p>
+            </section>
+            <div class="mode-grid">
+              <div class="mode active"><span class="pill">快练</span><h3 style="margin-top:10px">5 题</h3><p class="muted">约 3 分钟</p></div>
+              <div class="mode"><span class="pill reward">巩固</span><h3 style="margin-top:10px">10 题</h3><p class="muted">约 6 分钟</p></div>
+              <div class="mode"><span class="pill bad">错题</span><h3 style="margin-top:10px">只练错题</h3><p class="muted">精准回看</p></div>
+              <div class="mode"><span class="pill good">混合</span><h3 style="margin-top:10px">新旧混练</h3><p class="muted">防止遗忘</p></div>
+            </div>
+            <section class="panel" style="margin-top:14px">
+              <div class="row"><span>能量转化</span><span class="pill bad">弱</span></div>
+              <div class="progress"><span style="width:42%"></span></div>
+              <div class="row"><span>物质输入输出</span><span class="pill">待巩固</span></div>
+              <div class="progress"><span style="width:58%"></span></div>
+            </section>
+            <div class="bottom">
+              <button class="primary-btn"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>开始二刷</button>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="frame">
+        <div class="frame-label"><span>04 输入增强</span><span>Import</span></div>
+        <div class="phone">
+          <div class="phone-inner">
+            <div class="status"><span>9:41</span><span class="signal"><span>5G</span><span class="battery"></span></span></div>
+            <div class="topbar">
+              <button class="icon-btn" aria-label="返回"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+              <span class="pill">输入来源</span>
+              <button class="icon-btn" aria-label="帮助"><svg viewBox="0 0 24 24"><path d="M9.1 9a3 3 0 1 1 5.8 1c-.6 1-1.7 1.5-2.4 2.2-.4.4-.5.8-.5 1.3M12 18h.01"/></svg></button>
+            </div>
+            <section class="hero">
+              <h2>导入资料生成题目</h2>
+              <p class="muted">首版优先支持文本、网页链接和文件，视频入口暂保留。</p>
+            </section>
+            <div class="source-grid">
+              <div class="source active"><span class="pill">文本</span><p class="muted" style="margin-top:10px">适合笔记和短文</p></div>
+              <div class="source"><span class="pill">网页</span><p class="muted" style="margin-top:10px">粘贴文章链接</p></div>
+              <div class="source"><span class="pill">文件</span><p class="muted" style="margin-top:10px">PDF / DOCX / TXT</p></div>
+              <div class="source"><span class="pill bad">视频</span><p class="muted" style="margin-top:10px">后续开放</p></div>
+            </div>
+            <section class="upload">
+              <svg viewBox="0 0 24 24" style="width:40px;height:40px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+              <div>
+                <b>点击上传学习资料</b>
+                <p class="muted">单个文件不超过 10MB</p>
+              </div>
+            </section>
+            <div class="bottom">
+              <button class="primary-btn"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>解析并生成</button>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="frame">
+        <div class="frame-label"><span>05 失败与空状态</span><span>State</span></div>
+        <div class="phone">
+          <div class="phone-inner">
+            <div class="status"><span>9:41</span><span class="signal"><span>5G</span><span class="battery"></span></span></div>
+            <div class="topbar">
+              <button class="icon-btn" aria-label="返回"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+              <span class="pill bad">生成失败</span>
+              <button class="icon-btn" aria-label="关闭"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+            </div>
+            <section class="empty">
+              <div class="empty-visual"><svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01M10.3 3.9 2.5 17.5A2 2 0 0 0 4.2 20h15.6a2 2 0 0 0 1.7-2.5L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg></div>
+              <div>
+                <h2>这次没有生成成功</h2>
+                <p class="muted" style="margin-top:8px">内容太短或网络波动。可以补充材料后重试。</p>
+              </div>
+            </section>
+            <div class="list">
+              <div class="list-item"><b>建议</b><p class="muted">输入至少 50 字，或换成更完整的文章链接。</p></div>
+            </div>
+            <div class="bottom" style="display:grid;gap:10px">
+              <button class="primary-btn"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7M21 3v6h-6"/></svg>重新生成</button>
+              <button class="ghost-btn"><svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>修改输入内容</button>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="frame">
+        <div class="frame-label"><span>06 额度与 VIP</span><span>Quota</span></div>
+        <div class="phone">
+          <div class="phone-inner">
+            <div class="status"><span>9:41</span><span class="signal"><span>5G</span><span class="battery"></span></span></div>
+            <div class="topbar">
+              <div class="brand">
+                <span class="brand-mark"><svg viewBox="0 0 24 24"><path d="M12 3l3 6 6 .9-4.5 4.4 1.1 6.2L12 17.6 6.4 20.5l1.1-6.2L3 9.9 9 9z"/></svg></span>
+                <span>学习额度</span>
+              </div>
+              <button class="icon-btn" aria-label="设置"><svg viewBox="0 0 24 24"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V22a2 2 0 1 1-4 0v-.2a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H2a2 2 0 1 1 0-4h.2a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1A2 2 0 1 1 6.1 3.3l.1.1a1.7 1.7 0 0 0 1.8.3h.1a1.7 1.7 0 0 0 1-1.5V2a2 2 0 1 1 4 0v.2a1.7 1.7 0 0 0 1 1.5h.1a1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8v.1a1.7 1.7 0 0 0 1.5 1h.2a2 2 0 1 1 0 4h-.2a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+            </div>
+            <section class="quota">
+              <span class="pill reward">今日剩余 1 次</span>
+              <h2>升级后解锁更多生成次数</h2>
+              <p style="opacity:.78">适合考前集中复习、长文档解析和错题二刷。</p>
+              <div class="plan">
+                <div class="quota-row"><strong>免费版</strong><span>3 次 / 天</span></div>
+                <div class="quota-row"><strong>学习版</strong><span>30 次 / 天</span></div>
+                <div class="quota-row"><strong>进阶版</strong><span>无限练习</span></div>
+              </div>
+            </section>
+            <div class="list">
+              <div class="list-item"><b>已用额度</b><p class="muted">今天已生成 2 次，剩余 1 次。</p><div class="progress"><span style="width:66%"></span></div></div>
+              <div class="list-item"><b>权益预留</b><p class="muted">后续接入微信登录、会员、支付和历史数据归档。</p></div>
+            </div>
+            <div class="bottom">
+              <button class="primary-btn"><svg viewBox="0 0 24 24"><path d="M12 3l3 6 6 .9-4.5 4.4 1.1 6.2L12 17.6 6.4 20.5l1.1-6.2L3 9.9 9 9z"/></svg>查看学习版</button>
+            </div>
+          </div>
+        </div>
+      </article>
+    </section>
+  </main>
+</body>
+</html>

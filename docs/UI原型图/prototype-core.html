@@ -1,0 +1,929 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI 闯关学习核心原型</title>
+  <style>
+    :root {
+      --bg: #f4f8fb;
+      --surface: #ffffff;
+      --surface-soft: #f8fbfd;
+      --text: #172033;
+      --muted: #6a778b;
+      --line: #e4ebf2;
+      --primary: #17b8bc;
+      --primary-dark: #07949f;
+      --blue: #356bff;
+      --reward: #f7b731;
+      --reward-soft: #fff4d4;
+      --success: #158a55;
+      --success-soft: #e6f8ef;
+      --danger: #cf3e4f;
+      --danger-soft: #fff0f2;
+      --shadow: 0 16px 40px rgba(31, 62, 91, .1);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        linear-gradient(140deg, rgba(23, 184, 188, .12), transparent 34%),
+        linear-gradient(320deg, rgba(247, 183, 49, .16), transparent 38%),
+        var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+      line-height: 1.5;
+    }
+
+    .page {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 32px 0 40px;
+    }
+
+    .board-title {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .board-title h1 {
+      margin: 0;
+      font-size: clamp(24px, 4vw, 36px);
+      line-height: 1.15;
+      letter-spacing: 0;
+    }
+
+    .board-title p {
+      margin: 8px 0 0;
+      max-width: 620px;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .legend {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 36px;
+      padding: 0 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .76);
+      color: var(--primary-dark);
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 22px;
+    }
+
+    .frame {
+      min-width: 0;
+    }
+
+    .frame-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 32px;
+      margin-bottom: 10px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .phone {
+      position: relative;
+      overflow: hidden;
+      width: 100%;
+      max-width: 360px;
+      min-height: 680px;
+      margin: 0 auto;
+      border: 1px solid rgba(151, 169, 188, .35);
+      border-radius: 30px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .phone-inner {
+      display: flex;
+      min-height: 680px;
+      flex-direction: column;
+      padding: 18px 18px 20px;
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 26px;
+      margin-bottom: 12px;
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .signal {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .battery {
+      width: 24px;
+      height: 11px;
+      border: 1.5px solid var(--text);
+      border-radius: 4px;
+      padding: 2px;
+    }
+
+    .battery::before {
+      display: block;
+      width: 65%;
+      height: 100%;
+      border-radius: 2px;
+      background: var(--text);
+      content: "";
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 44px;
+      margin-bottom: 14px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      font-weight: 900;
+    }
+
+    .brand-mark,
+    .icon-btn,
+    .small-icon {
+      display: inline-grid;
+      place-items: center;
+      flex: none;
+    }
+
+    .brand-mark {
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--primary), var(--blue));
+      color: #fff;
+      box-shadow: 0 8px 18px rgba(23, 184, 188, .28);
+    }
+
+    .icon-btn {
+      width: 44px;
+      height: 44px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--surface);
+      color: var(--text);
+    }
+
+    svg {
+      width: 20px;
+      height: 20px;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+    }
+
+    .hero {
+      display: grid;
+      gap: 12px;
+      padding: 18px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, #e8fbfb, #f7f3ff 56%, #fff7dd);
+      border: 1px solid rgba(23, 184, 188, .15);
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 25px;
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+
+    h3 {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.3;
+      letter-spacing: 0;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin: 16px 0 12px;
+    }
+
+    .tab {
+      min-height: 46px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--surface);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .tab.active {
+      border-color: rgba(23, 184, 188, .45);
+      background: #e9fbfb;
+      color: var(--primary-dark);
+    }
+
+    .input-box {
+      display: grid;
+      gap: 12px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--surface-soft);
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 136px;
+      resize: none;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: var(--text);
+      font: inherit;
+      font-size: 15px;
+    }
+
+    .helper-row,
+    .stats-row,
+    .choice-head,
+    .report-row,
+    .share-line {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 30px;
+      padding: 0 10px;
+      border-radius: 999px;
+      background: #eef5ff;
+      color: #2856b8;
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .pill.reward {
+      background: var(--reward-soft);
+      color: #8a5b00;
+    }
+
+    .pill.good {
+      background: var(--success-soft);
+      color: var(--success);
+    }
+
+    .pill.bad {
+      background: var(--danger-soft);
+      color: var(--danger);
+    }
+
+    .primary-btn,
+    .ghost-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      min-height: 50px;
+      border-radius: 16px;
+      font-size: 15px;
+      font-weight: 900;
+    }
+
+    button {
+      font-family: inherit;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    button:active {
+      transform: scale(.985);
+    }
+
+    button:focus-visible,
+    textarea:focus-visible {
+      outline: 3px solid rgba(53, 107, 255, .35);
+      outline-offset: 2px;
+    }
+
+    .primary-btn {
+      border: 0;
+      background: linear-gradient(135deg, var(--primary), var(--blue));
+      color: #fff;
+      box-shadow: 0 12px 24px rgba(23, 128, 188, .25);
+    }
+
+    .ghost-btn {
+      border: 1px solid var(--line);
+      background: var(--surface);
+      color: var(--text);
+    }
+
+    .bottom {
+      margin-top: auto;
+      padding-top: 16px;
+    }
+
+    .mini-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .mini-card {
+      min-height: 72px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--surface);
+    }
+
+    .mini-card b {
+      display: block;
+      margin-top: 6px;
+      font-size: 15px;
+    }
+
+    .loader-wrap {
+      display: grid;
+      place-items: center;
+      padding: 28px 0 18px;
+    }
+
+    .loader {
+      position: relative;
+      width: 144px;
+      height: 144px;
+      border-radius: 50%;
+      background: conic-gradient(var(--primary) 0 72%, #e8eef5 72% 100%);
+      animation: spin 1.8s linear infinite;
+    }
+
+    .loader::before {
+      position: absolute;
+      inset: 12px;
+      border-radius: 50%;
+      background: var(--surface);
+      content: "";
+    }
+
+    .loader-core {
+      position: absolute;
+      display: grid;
+      place-items: center;
+      width: 94px;
+      height: 94px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #f7ffff, #f3f6ff);
+      color: var(--primary-dark);
+      font-size: 25px;
+      font-weight: 900;
+      box-shadow: inset 0 0 0 1px var(--line);
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .steps {
+      display: grid;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .step {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 48px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--surface-soft);
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .dot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--line);
+    }
+
+    .step.done .dot {
+      background: var(--success);
+    }
+
+    .step.active .dot {
+      background: var(--primary);
+      box-shadow: 0 0 0 6px rgba(23, 184, 188, .12);
+    }
+
+    .progress {
+      overflow: hidden;
+      height: 10px;
+      border-radius: 999px;
+      background: #e8eef5;
+    }
+
+    .progress span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--primary), var(--blue));
+    }
+
+    .question-card {
+      display: grid;
+      gap: 14px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: var(--surface);
+      box-shadow: 0 10px 24px rgba(31, 62, 91, .06);
+    }
+
+    .choice-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .choice {
+      display: grid;
+      grid-template-columns: 30px 1fr;
+      align-items: center;
+      gap: 10px;
+      min-height: 54px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--surface-soft);
+      color: var(--text);
+      text-align: left;
+      font-size: 14px;
+      font-weight: 750;
+    }
+
+    .choice strong {
+      display: grid;
+      place-items: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 10px;
+      background: #eef5ff;
+      color: var(--blue);
+    }
+
+    .choice.selected,
+    .choice.correct {
+      border-color: rgba(23, 184, 188, .5);
+      background: #e9fbfb;
+    }
+
+    .choice.wrong {
+      border-color: rgba(207, 62, 79, .35);
+      background: var(--danger-soft);
+    }
+
+    .explain {
+      display: grid;
+      gap: 12px;
+      padding: 14px;
+      border-radius: 18px;
+      background: #f6fbff;
+      border: 1px solid #dcecff;
+    }
+
+    .explain.success {
+      background: var(--success-soft);
+      border-color: #bdebd4;
+    }
+
+    .score-card {
+      display: grid;
+      gap: 12px;
+      padding: 18px;
+      border-radius: 22px;
+      background: linear-gradient(135deg, #12304a, #105c68);
+      color: #fff;
+    }
+
+    .score {
+      font-size: 54px;
+      line-height: 1;
+      font-weight: 950;
+    }
+
+    .score small {
+      font-size: 18px;
+      opacity: .75;
+    }
+
+    .report-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .metric {
+      min-height: 94px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--surface-soft);
+    }
+
+    .metric b {
+      display: block;
+      margin-top: 8px;
+      font-size: 22px;
+    }
+
+    .list {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .list-item {
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--surface);
+      font-size: 13px;
+    }
+
+    .poster {
+      display: grid;
+      gap: 18px;
+      padding: 22px;
+      border-radius: 24px;
+      background: linear-gradient(160deg, #0b3b57, #0e8f98 58%, #f7b731);
+      color: #fff;
+      box-shadow: 0 18px 36px rgba(14, 102, 121, .22);
+    }
+
+    .poster-card {
+      display: grid;
+      gap: 10px;
+      padding: 16px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, .16);
+      border: 1px solid rgba(255, 255, 255, .28);
+    }
+
+    .qr {
+      display: grid;
+      place-items: center;
+      width: 74px;
+      height: 74px;
+      border-radius: 16px;
+      background:
+        linear-gradient(90deg, #fff 8px, transparent 8px 14px, #fff 14px 22px, transparent 22px),
+        linear-gradient(#fff 8px, transparent 8px 14px, #fff 14px 22px, transparent 22px),
+        rgba(255, 255, 255, .2);
+      background-size: 28px 28px;
+      opacity: .95;
+    }
+
+    @media (max-width: 980px) {
+      .grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 680px) {
+      .page {
+        width: min(100% - 20px, 380px);
+        padding: 20px 0 28px;
+      }
+
+      .board-title {
+        display: block;
+      }
+
+      .legend {
+        margin-top: 12px;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .phone {
+        max-width: none;
+        min-height: 640px;
+      }
+
+      .phone-inner {
+        min-height: 640px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="board-title">
+      <div>
+        <h1>AI 闯关学习核心原型</h1>
+        <p>输入知识、生成题目、逐关答题、即时讲解、复盘分享。</p>
+      </div>
+      <span class="legend">核心闭环</span>
+    </header>
+
+    <section class="grid" aria-label="核心流程页面">
+      <article class="frame">
+        <div class="frame-label"><span>01 首页输入</span><span>Start</span></div>
+        <div class="phone">
+          <div class="phone-inner">
+            <div class="status"><span>9:41</span><span class="signal"><span>5G</span><span class="battery"></span></span></div>
+            <div class="topbar">
+              <div class="brand">
+                <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3v18M5 8h14M7 16h10"/></svg></span>
+                <span>闯关学 AI</span>
+              </div>
+              <button class="icon-btn" aria-label="学习记录"><svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></button>
+            </div>
+            <section class="hero">
+              <span class="pill reward">今日可生成 3 次</span>
+              <h2>把任意知识变成闯关题</h2>
+              <p class="muted">粘贴笔记、网页或上传文件，AI 会生成 5 到 10 道关卡题。</p>
+            </section>
+            <div class="tabs" role="tablist" aria-label="输入类型">
+              <button class="tab active">文本</button>
+              <button class="tab">链接</button>
+              <button class="tab">文件</button>
+              <button class="tab">视频</button>
+            </div>
+            <section class="input-box">
+              <textarea aria-label="学习内容">光合作用是绿色植物利用光能，将二氧化碳和水转化为有机物，并释放氧气的过程。</textarea>
+              <div class="helper-row">
+                <span class="muted">已输入 42 字</span>
+                <span class="pill">单选 + 判断</span>
+              </div>
+            </section>
+            <div class="mini-cards">
+              <div class="mini-card"><span class="muted">题量</span><b>8 题</b></div>
+              <div class="mini-card"><span class="muted">难度</span><b>适中</b></div>
+              <div class="mini-card"><span class="muted">模式</span><b>闯关</b></div>
+            </div>
+            <div class="bottom">
+              <button class="primary-btn"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>开始生成闯关</button>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="frame">
+        <div class="frame-label"><span>02 AI 生成中</span><span>Loading</span></div>
+        <div class="phone">
+          <div class="phone-inner">
+            <div class="status"><span>9:41</span><span class="signal"><span>5G</span><span class="battery"></span></span></div>
+            <div class="topbar">
+              <button class="icon-btn" aria-label="返回"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+              <span class="pill">会话 #2048</span>
+              <button class="icon-btn" aria-label="关闭"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+            </div>
+            <section class="loader-wrap">
+              <div class="loader" aria-label="生成进度"></div>
+              <div class="loader-core">72%</div>
+            </section>
+            <section class="question-card">
+              <h2>正在生成你的闯关题</h2>
+              <p class="muted">AI 正在提取知识点并校验题目质量，完成后自动进入第一关。</p>
+              <div class="progress" aria-label="生成进度条"><span style="width:72%"></span></div>
+            </section>
+            <div class="steps">
+              <div class="step done"><span class="dot"></span><span>解析输入内容</span></div>
+              <div class="step done"><span class="dot"></span><span>提取核心知识点</span></div>
+              <div class="step active"><span class="dot"></span><span>生成选择题与判断题</span></div>
+              <div class="step"><span class="dot"></span><span>校验答案和解析</span></div>
+            </div>
+            <div class="bottom">
+              <button class="ghost-btn"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>生成失败时重试</button>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="frame">
+        <div class="frame-label"><span>03 闯关答题</span><span>Quiz</span></div>
+        <div class="phone">
+          <div class="phone-inner">
+            <div class="status"><span>9:41</span><span class="signal"><span>5G</span><span class="battery"></span></span></div>
+            <div class="topbar">
+              <button class="icon-btn" aria-label="返回"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+              <span class="pill reward">第 3 / 8 关</span>
+              <button class="icon-btn" aria-label="更多"><svg viewBox="0 0 24 24"><path d="M12 5h.01M12 12h.01M12 19h.01"/></svg></button>
+            </div>
+            <div class="stats-row">
+              <span class="muted">光合作用基础</span>
+              <span class="pill good">连对 2 题</span>
+            </div>
+            <div class="progress" style="margin:12px 0 16px"><span style="width:37.5%"></span></div>
+            <section class="question-card">
+              <div class="choice-head">
+                <span class="pill">单选题</span>
+                <span class="muted">中等</span>
+              </div>
+              <h3>光合作用中，植物主要利用哪种能量完成物质转化？</h3>
+              <div class="choice-list">
+                <button class="choice"><strong>A</strong><span>热能</span></button>
+                <button class="choice selected"><strong>B</strong><span>光能</span></button>
+                <button class="choice"><strong>C</strong><span>机械能</span></button>
+                <button class="choice"><strong>D</strong><span>声能</span></button>
+              </div>
+            </section>
+            <div class="bottom">
+              <button class="primary-btn"><svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>提交答案</button>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="frame">
+        <div class="frame-label"><span>04 即时讲解</span><span>Feedback</span></div>
+        <div class="phone">
+          <div class="phone-inner">
+            <div class="status"><span>9:41</span><span class="signal"><span>5G</span><span class="battery"></span></span></div>
+            <div class="topbar">
+              <button class="icon-btn" aria-label="返回"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+              <span class="pill reward">第 3 / 8 关</span>
+              <button class="icon-btn" aria-label="收藏"><svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
+            </div>
+            <section class="question-card">
+              <div class="choice-head">
+                <span class="pill good">回答正确</span>
+                <span class="muted">+12 XP</span>
+              </div>
+              <h3>光合作用中，植物主要利用哪种能量完成物质转化？</h3>
+              <div class="choice-list">
+                <button class="choice correct"><strong>B</strong><span>光能</span></button>
+              </div>
+              <div class="explain success">
+                <h3>解析</h3>
+                <p class="muted">绿色植物通过叶绿体吸收光能，把二氧化碳和水转化为有机物，同时释放氧气。</p>
+              </div>
+              <div class="helper-row">
+                <span class="pill">知识点：能量转化</span>
+                <span class="pill reward">掌握 +1</span>
+              </div>
+            </section>
+            <div class="list">
+              <div class="list-item"><b>易错点</b><p class="muted">不要把光合作用理解成单纯吸收氧气，它实际会释放氧气。</p></div>
+            </div>
+            <div class="bottom">
+              <button class="primary-btn"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>进入下一关</button>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="frame">
+        <div class="frame-label"><span>05 复盘报告</span><span>Report</span></div>
+        <div class="phone">
+          <div class="phone-inner">
+            <div class="status"><span>9:41</span><span class="signal"><span>5G</span><span class="battery"></span></span></div>
+            <div class="topbar">
+              <div class="brand">
+                <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16M8 16v-5M12 16V8M16 16v-7"/></svg></span>
+                <span>学习复盘</span>
+              </div>
+              <button class="icon-btn" aria-label="分享"><svg viewBox="0 0 24 24"><path d="M18 8a3 3 0 1 0-2.83-4M6 14a3 3 0 1 0 2.83 4M15 7l-6 4M9 13l6 4"/></svg></button>
+            </div>
+            <section class="score-card">
+              <span class="pill reward">光合作用基础</span>
+              <div class="report-row">
+                <div>
+                  <div class="score">88<small>分</small></div>
+                  <p>你已掌握核心概念</p>
+                </div>
+                <svg viewBox="0 0 24 24" style="width:52px;height:52px"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM5 5H3v2a4 4 0 0 0 4 4M19 5h2v2a4 4 0 0 1-4 4"/></svg>
+              </div>
+            </section>
+            <div class="report-grid">
+              <div class="metric"><span class="muted">正确率</span><b>87.5%</b></div>
+              <div class="metric"><span class="muted">薄弱点</span><b>2 个</b></div>
+              <div class="metric"><span class="muted">错题</span><b>1 题</b></div>
+              <div class="metric"><span class="muted">用时</span><b>4:26</b></div>
+            </div>
+            <div class="list">
+              <div class="list-item"><b>本次摘要</b><p class="muted">你理解了光合作用的输入、输出和能量来源。</p></div>
+              <div class="list-item"><b>下一步建议</b><p class="muted">复习叶绿体结构，再练习影响光合作用速率的因素。</p></div>
+            </div>
+            <div class="bottom">
+              <button class="primary-btn"><svg viewBox="0 0 24 24"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M16 6l-4-4-4 4M12 2v14"/></svg>分享学习结果</button>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="frame">
+        <div class="frame-label"><span>06 分享结果</span><span>Share</span></div>
+        <div class="phone">
+          <div class="phone-inner">
+            <div class="status"><span>9:41</span><span class="signal"><span>5G</span><span class="battery"></span></span></div>
+            <div class="topbar">
+              <button class="icon-btn" aria-label="返回"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+              <span class="pill">分享预览</span>
+              <button class="icon-btn" aria-label="保存"><svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2zM17 21v-8H7v8M7 3v5h8"/></svg></button>
+            </div>
+            <section class="poster">
+              <div>
+                <span class="pill reward">AI 闯关完成</span>
+                <h2 style="margin-top:14px">我刚学完光合作用基础</h2>
+              </div>
+              <div class="poster-card">
+                <span>本次得分</span>
+                <div class="score">88<small>分</small></div>
+                <div class="share-line"><span>正确率</span><strong>87.5%</strong></div>
+                <div class="share-line"><span>连续闯关</span><strong>8 关</strong></div>
+              </div>
+              <div class="poster-card">
+                <strong>学习总结</strong>
+                <p>掌握了光合作用的能量来源、物质转化和氧气释放过程。</p>
+              </div>
+              <div class="share-line">
+                <div>
+                  <strong>闯关学 AI</strong>
+                  <p style="margin-top:4px;opacity:.78">扫码生成你的专属题目</p>
+                </div>
+                <span class="qr" aria-label="二维码占位"></span>
+              </div>
+            </section>
+            <div class="bottom">
+              <button class="primary-btn"><svg viewBox="0 0 24 24"><path d="M18 8a3 3 0 1 0-2.83-4M6 14a3 3 0 1 0 2.83 4M15 7l-6 4M9 13l6 4"/></svg>发送给好友</button>
+            </div>
+          </div>
+        </div>
+      </article>
+    </section>
+  </main>
+</body>
+</html>
