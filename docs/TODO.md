@@ -4,101 +4,117 @@
 
 跑通首版核心闭环：
 
-用户输入内容 -> AI 生成题目 -> 用户答题 -> AI 生成分析报告。
+用户输入内容 -> AI 生成题目 -> 用户答题 -> AI 生成分析报告 -> 分享学习结果。
 
 技术栈：
 
-- 前端：Taro + React 微信小程序
-- 后端：Spring Boot 3 + MyBatis-Plus
-- 数据库：MySQL
-- AI：Spring AI Alibaba + 通义千问
+- 前端：Taro 4.2 + React 微信小程序/H5
+- 后端：Spring Boot 3.5 + MyBatis-Plus
+- 数据库：MySQL，测试环境使用 H2
+- AI：Spring AI Alibaba + 通义千问，支持 `mock` / `dashscope` provider
+
+## 当前实现状态
+
+- [x] 完成文本输入核心闭环
+- [x] 完成后端 API、数据库表、AI 适配层
+- [x] 完成小程序端核心页面流转
+- [x] 完成基础分享结果页
+- [x] 完成后端 MockMvc 测试
+- [x] 完成 Playwright 端到端验证
 
 ## P0 核心闭环
 
 ### 项目初始化
 
-- [ ] 创建 Taro + React 小程序项目
-- [ ] 创建 Spring Boot 3 后端项目
-- [ ] 配置 MySQL 连接
-- [ ] 配置 MyBatis-Plus
-- [ ] 配置 Spring AI Alibaba
-- [ ] 配置通义千问 API Key
+- [x] 创建 Taro + React 小程序项目
+- [x] 创建 Spring Boot 3 后端项目
+- [x] 配置 MySQL 连接
+- [x] 配置 MyBatis-Plus
+- [x] 配置 Spring AI Alibaba
+- [x] 配置通义千问 API Key
+- [x] 配置 H2 测试环境
 
 ### 数据库
 
-- [ ] 创建 `learning_session` 表
-- [ ] 创建 `source_material` 表
-- [ ] 创建 `question` 表
-- [ ] 创建 `answer_record` 表
-- [ ] 创建 `learning_report` 表
+- [x] 创建 `learning_session` 表
+- [x] 创建 `source_material` 表
+- [x] 创建 `question` 表
+- [x] 创建 `answer_record` 表
+- [x] 创建 `learning_report` 表
 
 ### 后端接口
 
-- [ ] 实现 `POST /api/learning/sessions`
-- [ ] 实现 `POST /api/learning/sessions/{sessionId}/questions`
-- [ ] 实现 `POST /api/learning/sessions/{sessionId}/answers`
-- [ ] 实现 `POST /api/learning/sessions/{sessionId}/report`
-- [ ] 实现 `GET /api/learning/sessions/{sessionId}`
+- [x] 实现 `POST /api/learning/sessions`
+- [x] 实现 `POST /api/learning/sessions/{sessionId}/questions`
+- [x] 实现 `POST /api/learning/sessions/{sessionId}/answers`
+- [x] 实现 `POST /api/learning/sessions/{sessionId}/report`
+- [x] 实现 `GET /api/learning/sessions/{sessionId}`
 
 ### AI 能力
 
-- [ ] 实现 `QuestionGenerationService`
-- [ ] 实现 `ReportGenerationService`
-- [ ] 固定题目生成提示词
-- [ ] 固定报告生成提示词
-- [ ] 校验 AI 返回 JSON
-- [ ] 生成失败时重试一次
+- [x] 实现题目生成能力
+- [x] 实现报告生成能力
+- [x] 固定题目生成提示词
+- [x] 固定报告生成提示词
+- [x] 校验 AI 返回 JSON
+- [x] 生成失败时重试一次
+- [x] 支持 `mock` provider
+- [x] 支持 `dashscope` provider
 
 ### 小程序页面
 
-- [ ] 实现首页输入页
-- [ ] 实现 AI 生成中页面
-- [ ] 实现闯关答题页
-- [ ] 实现即时讲解展示
-- [ ] 实现复盘报告页
+- [x] 实现首页输入页
+- [x] 实现 AI 生成中页面
+- [x] 实现闯关答题页
+- [x] 实现即时讲解展示
+- [x] 实现复盘报告页
+- [x] 实现基础分享页
 
 ### 核心流程
 
-- [ ] 文本输入创建学习会话
-- [ ] 后端通过通义千问生成 5 到 10 道题
-- [ ] 小程序展示题目
-- [ ] 用户逐题答题
-- [ ] 答题后显示对错和解析
-- [ ] 完成全部题目后生成报告
-- [ ] 小程序展示报告
-- [ ] 不登录完成完整流程
+- [x] 文本输入创建学习会话
+- [x] 后端生成 5 到 10 道题
+- [x] 小程序展示题目
+- [x] 用户逐题答题
+- [x] 答题后显示对错和解析
+- [x] 完成全部题目后生成报告
+- [x] 小程序展示报告
+- [x] 不登录完成完整流程
+- [x] 分享学习结果页
 
 ## P1 MVP 完善
 
 ### 输入增强
 
-- [ ] 支持网页链接输入
+- [ ] 支持网页链接输入解析
 - [ ] 支持文件上传
 - [ ] 支持文件文本提取
-- [ ] 限制文本长度
+- [x] 限制文本长度
 - [ ] 限制文件大小
 - [ ] 限制文件类型
 - [ ] 过长内容先摘要再出题
 
 ### 体验完善
 
-- [ ] 生成中展示步骤状态
-- [ ] 生成失败展示错误提示
+- [x] 生成中展示步骤状态
+- [x] 生成失败展示错误提示
 - [ ] 生成失败支持手动重试
-- [ ] 答题页展示进度
-- [ ] 报告页展示正确率
-- [ ] 报告页展示错题汇总
-- [ ] 报告页展示薄弱知识点
-- [ ] 报告页展示下一步建议
+- [x] 答题页展示进度
+- [x] 报告页展示正确率
+- [x] 报告页展示错题汇总
+- [x] 报告页展示薄弱知识点
+- [x] 报告页展示下一步建议
+- [x] H5 开发环境 CORS 支持
 
 ### 后端完善
 
-- [ ] 统一接口返回格式
-- [ ] 统一异常处理
-- [ ] 添加参数校验
+- [x] 统一接口返回格式
+- [x] 统一异常处理
+- [x] 添加参数校验
 - [ ] 添加 AI 调用日志
-- [ ] 添加生成结果缓存
+- [x] 添加生成结果缓存
 - [ ] 添加内容安全过滤
+- [x] 添加 MockMvc 接口测试
 
 ## P2 复盘与分享
 
@@ -112,15 +128,15 @@
 ### 错题复盘
 
 - [ ] 实现错题回看页
-- [ ] 展示用户答案和正确答案
-- [ ] 展示错因分析
+- [x] 报告中展示用户答案和正确答案
+- [x] 报告中展示错题解析
 - [ ] 支持加入二刷练习
 
 ### 分享
 
-- [ ] 实现报告分享页
-- [ ] 支持分享通关成绩
-- [ ] 支持分享学习摘要
+- [x] 实现报告分享页
+- [x] 支持分享通关成绩
+- [x] 支持分享学习摘要
 - [ ] 支持分享错题复盘卡片
 
 ## P3 后续演进
@@ -140,10 +156,11 @@
 
 ## 验收标准
 
-- [ ] 文本输入能创建学习会话
-- [ ] 后端能通过通义千问生成 5 到 10 道题
-- [ ] 小程序能逐题答题
-- [ ] 答题后能即时显示对错和解析
-- [ ] 完成后能生成复盘报告
-- [ ] MySQL 能保存会话、题目、答题记录、报告
-- [ ] 不登录也能完成核心流程
+- [x] 文本输入能创建学习会话
+- [x] 后端能生成 5 到 10 道题
+- [x] 小程序能逐题答题
+- [x] 答题后能即时显示对错和解析
+- [x] 完成后能生成复盘报告
+- [x] MySQL 能保存会话、题目、答题记录、报告
+- [x] 不登录也能完成核心流程
+- [x] H5 端到端流程通过 Playwright 验证
