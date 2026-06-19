@@ -68,7 +68,7 @@ public class LearningService {
     }
 
     @Transactional
-    public CreateSessionResponse createSession(CreateSessionRequest request) {
+    public CreateSessionResponse  createSession(CreateSessionRequest request) {
         if ("text".equals(request.inputType()) && !StringUtils.hasText(request.content())) {
             throw new BusinessException("VALIDATION_ERROR", "content 不能为空", HttpStatus.BAD_REQUEST);
         }

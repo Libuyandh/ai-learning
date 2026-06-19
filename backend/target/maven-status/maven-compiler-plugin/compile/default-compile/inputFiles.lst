@@ -33,5 +33,10 @@ D:\AI-coding\ai-learning\backend\src\main\java\com\ailearning\mapper\LearningRep
 D:\AI-coding\ai-learning\backend\src\main\java\com\ailearning\mapper\LearningSessionMapper.java
 D:\AI-coding\ai-learning\backend\src\main\java\com\ailearning\mapper\QuestionMapper.java
 D:\AI-coding\ai-learning\backend\src\main\java\com\ailearning\mapper\SourceMaterialMapper.java
+D:\AI-coding\ai-learning\backend\src\main\java\com\ailearning\search\FirecrawlWebSearchClient.java
+D:\AI-coding\ai-learning\backend\src\main\java\com\ailearning\search\MockWebSearchClient.java
+D:\AI-coding\ai-learning\backend\src\main\java\com\ailearning\search\WebSearchClient.java
+D:\AI-coding\ai-learning\backend\src\main\java\com\ailearning\search\WebSearchResult.java
+D:\AI-coding\ai-learning\backend\src\main\java\com\ailearning\search\WebSearchTools.java
 D:\AI-coding\ai-learning\backend\src\main\java\com\ailearning\service\JsonSupport.java
 D:\AI-coding\ai-learning\backend\src\main\java\com\ailearning\service\LearningService.java
