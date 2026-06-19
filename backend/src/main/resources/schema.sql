@@ -31,6 +31,9 @@ CREATE TABLE IF NOT EXISTS question (
   explanation TEXT NOT NULL,
   knowledge_point VARCHAR(255) NOT NULL,
   difficulty VARCHAR(32) NOT NULL,
+  source_url VARCHAR(1024) NOT NULL,
+  evidence_text TEXT NOT NULL,
+  confidence DECIMAL(4,3) NOT NULL,
   sort_order INT NOT NULL,
   created_at DATETIME NOT NULL
 );

@@ -19,3 +19,9 @@ mybatis-plus:
 
 ai:
   provider: dashscope
+
+search:
+  provider: firecrawl
+  max-results: 5
+  max-content-length: 12000
+  api-key: ${FIRECRAWL_API_KEY:}

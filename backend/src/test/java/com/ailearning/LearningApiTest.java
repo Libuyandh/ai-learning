@@ -1,5 +1,6 @@
 package com.ailearning;
 
+import com.ailearning.search.MockWebSearchClient;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -22,6 +23,9 @@ class LearningApiTest {
 
     @Autowired
     MockMvc mockMvc;
+
+    @Autowired
+    MockWebSearchClient webSearchClient;
 
     @Test
     void createSessionRejectsBlankText() throws Exception {
@@ -95,5 +99,41 @@ class LearningApiTest {
                 .andExpect(jsonPath("$.data.questions").isArray())
                 .andExpect(jsonPath("$.data.answers").isArray())
                 .andExpect(jsonPath("$.data.report.reportId").isNumber());
+    }
+
+    @Test
+    void searchesWebForNewKnowledgeAndReusesGeneratedQuestions() throws Exception {
+        int callsBefore = webSearchClient.callCount();
+        String createResponse = mockMvc.perform(post("/api/learning/sessions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"inputType\":\"text\",\"content\":\"Harness Engineering\"}"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        long sessionId = JsonTestUtils.longAt(createResponse, "/data/sessionId");
+
+        mockMvc.perform(post("/api/learning/sessions/" + sessionId + "/questions"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.questions[0].sourceUrl").value("https://example.com/search-result"))
+                .andExpect(jsonPath("$.data.questions[0].evidence").isNotEmpty())
+                .andExpect(jsonPath("$.data.questions[0].confidence").value(0.9));
+
+        mockMvc.perform(post("/api/learning/sessions/" + sessionId + "/questions"))
+                .andExpect(status().isOk());
+
+        org.junit.jupiter.api.Assertions.assertEquals(callsBefore + 1, webSearchClient.callCount());
+    }
+
+    @Test
+    void rejectsQuestionGenerationWhenSearchHasNoResults() throws Exception {
+        String createResponse = mockMvc.perform(post("/api/learning/sessions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"inputType\":\"text\",\"content\":\"__EMPTY__\"}"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        long sessionId = JsonTestUtils.longAt(createResponse, "/data/sessionId");
+
+        mockMvc.perform(post("/api/learning/sessions/" + sessionId + "/questions"))
+                .andExpect(status().isBadGateway())
+                .andExpect(jsonPath("$.code").value("AI_GENERATION_FAILED"));
     }
 }

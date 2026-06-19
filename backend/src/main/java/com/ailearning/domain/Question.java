@@ -15,6 +15,9 @@ public class Question {
     private String explanation;
     private String knowledgePoint;
     private String difficulty;
+    private String sourceUrl;
+    private String evidenceText;
+    private Double confidence;
     private Integer sortOrder;
     private LocalDateTime createdAt;
 
@@ -36,6 +39,12 @@ public class Question {
     public void setKnowledgePoint(String knowledgePoint) { this.knowledgePoint = knowledgePoint; }
     public String getDifficulty() { return difficulty; }
     public void setDifficulty(String difficulty) { this.difficulty = difficulty; }
+    public String getSourceUrl() { return sourceUrl; }
+    public void setSourceUrl(String sourceUrl) { this.sourceUrl = sourceUrl; }
+    public String getEvidenceText() { return evidenceText; }
+    public void setEvidenceText(String evidenceText) { this.evidenceText = evidenceText; }
+    public Double getConfidence() { return confidence; }
+    public void setConfidence(Double confidence) { this.confidence = confidence; }
     public Integer getSortOrder() { return sortOrder; }
     public void setSortOrder(Integer sortOrder) { this.sortOrder = sortOrder; }
     public LocalDateTime getCreatedAt() { return createdAt; }

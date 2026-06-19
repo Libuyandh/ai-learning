@@ -13,3 +13,5 @@ spring:
       mode: always
 ai:
   provider: mock
+search:
+  provider: mock

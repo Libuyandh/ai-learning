@@ -123,6 +123,9 @@ public class LearningService {
             question.setExplanation(aiQuestion.explanation());
             question.setKnowledgePoint(aiQuestion.knowledgePoint());
             question.setDifficulty(aiQuestion.difficulty());
+            question.setSourceUrl(aiQuestion.sourceUrl());
+            question.setEvidenceText(aiQuestion.evidence());
+            question.setConfidence(aiQuestion.confidence());
             question.setSortOrder(i + 1);
             question.setCreatedAt(now);
             questionMapper.insert(question);
@@ -257,6 +260,12 @@ public class LearningService {
             if ("single_choice".equals(question.type()) && question.options().size() < 4) {
                 throw new IllegalArgumentException("单选题至少 4 个选项");
             }
+            if (!StringUtils.hasText(question.sourceUrl()) || !StringUtils.hasText(question.evidence())) {
+                throw new IllegalArgumentException("题目缺少联网来源或证据");
+            }
+            if (question.confidence() == null || question.confidence() < 0.6 || question.confidence() > 1) {
+                throw new IllegalArgumentException("题目置信度不合格");
+            }
         }
     }
 
@@ -294,7 +303,8 @@ public class LearningService {
 
     private QuestionDto toQuestionDto(Question question) {
         return new QuestionDto(question.getId(), question.getQuestionType(), question.getStem(), jsonSupport.readStringList(question.getOptionsJson()),
-                question.getCorrectAnswer(), question.getExplanation(), question.getKnowledgePoint(), question.getDifficulty(), question.getSortOrder());
+                question.getCorrectAnswer(), question.getExplanation(), question.getKnowledgePoint(), question.getDifficulty(),
+                question.getSourceUrl(), question.getEvidenceText(), question.getConfidence(), question.getSortOrder());
     }
 
     private ReportResponse toReportResponse(LearningReport report) {

@@ -198,6 +198,8 @@ export default function Index () {
                 <View className={`explain ${answerResult.correct ? 'success' : ''}`}>
                   <Text className='h3'>解析</Text>
                   <Text className='muted'>{answerResult.explanation}</Text>
+                  <Text className='muted'>证据：{currentQuestion.evidence}</Text>
+                  <Text className='muted' onClick={() => Taro.setClipboardData({ data: currentQuestion.sourceUrl })}>来源：{currentQuestion.sourceUrl}</Text>
                 </View>
                 <View className='helper-row'>
                   <Text className='pill'>知识点：{currentQuestion.knowledgePoint}</Text>

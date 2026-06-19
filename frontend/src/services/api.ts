@@ -34,6 +34,9 @@ export type Question = {
   explanation: string
   knowledgePoint: string
   difficulty: string
+  sourceUrl: string
+  evidence: string
+  confidence: number
   sortOrder: number
 }
 
