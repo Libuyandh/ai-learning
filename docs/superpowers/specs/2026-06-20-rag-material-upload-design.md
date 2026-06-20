@@ -2,7 +2,7 @@
 
 ## 目标
 
-新增独立资料上传页面，支持用户导入学习资料生成题目。资料进入后端后完成文本解析、切分、向量化并写入 PostgreSQL pgvector。出题时由 AI 自动判断优先使用 RAG 资料，资料不足时再联网搜索，证据不足时拒绝生成题目。
+新增独立资料上传页面，支持用户导入学习资料生成题目。资料进入后端后完成文本解析、切分、向量化并写入 PostgreSQL pgvector。出题采用 Agentic RAG 模式，由 AI Agent 先尝试向量检索，再按需调用 SQL 查询、联网搜索等工具，信息足够才生成题目，证据不足时拒绝生成题目。
 
 ## 页面
 
@@ -37,7 +37,7 @@ POST /api/materials/{materialId}/questions
 
 `POST /api/materials/files` 接收文件和出题要求，后端解析文件文本。
 
-`POST /api/materials/{materialId}/questions` 触发 RAG 检索、AI 判断和题目生成。
+`POST /api/materials/{materialId}/questions` 触发 Agentic RAG 工具编排和题目生成。
 
 原学习会话接口保留，用于普通文本主题直接出题。
 
@@ -74,16 +74,17 @@ CREATE EXTENSION IF NOT EXISTS vector;
 - `MaterialController`：资料上传接口。
 - `MaterialService`：资料创建、文件解析、切分入库。
 - `DocumentParser`：PDF、DOCX、TXT 文本提取。
-- `RagService`：pgvector 检索。
-- `QuestionContextRouter`：构造 RAG 与联网搜索上下文。
+- `RagTools`：向量检索工具。
+- `SqlTools`：结构化资料与会话查询工具。
+- `QuestionAgent`：Agentic RAG 出题编排。
 
 调整模块：
 
 - `AiClient.generateQuestions` 增加上下文入参。
-- `DashScopeAiClient` 使用 Spring AI Alibaba / Spring AI 的 RAG 能力和 tool calling。
+- `DashScopeAiClient` 使用 Spring AI Alibaba / Spring AI 的 tool calling 实现 Agentic RAG。
 - `Question` 增加 `sourceType`。
 
-## 出题链路
+## Agentic RAG 链路
 
 ```text
 用户上传资料
@@ -104,15 +105,54 @@ Embedding
 用户点击解析并生成
   |
   v
-pgvector 相似度检索
+QuestionAgent 接收出题任务
   |
   v
-AI 判断 RAG 证据是否足够
+调用 RagTools 向量检索
   |
-  |-- 足够：基于 RAG 出题
-  |-- 不足：调用 webSearch
-  |-- 仍不足：返回 AI_GENERATION_FAILED
+  |-- 信息足够：生成题目
+  |
+  |-- 信息不足：调用 SqlTools 查询资料元数据、分片数量、历史会话
+        |
+        |-- 信息足够：生成题目
+        |
+        |-- 仍不足：调用 WebSearchTools 联网搜索
+              |
+              |-- 信息足够：生成题目
+              |
+              |-- 仍不足：返回 AI_GENERATION_FAILED
 ```
+
+Agent 决策规则：
+
+- 第一步必须调用向量检索。
+- 向量检索返回结果不足时，才允许调用 SQL 查询。
+- SQL 查询仍不足时，才允许调用联网搜索。
+- 每次工具调用后，Agent 必须判断证据是否足以支撑 5 到 10 道题。
+- 禁止跳过工具直接使用模型记忆出题。
+- 禁止无证据生成题目。
+
+## 工具集
+
+`RagTools.vectorSearch(query, materialId, topK)`：
+
+- 从 pgvector 检索资料分片。
+- 返回分片内容、相似度、分片序号、资料 ID。
+
+`SqlTools.queryMaterial(materialId)`：
+
+- 查询资料元数据、解析状态、分片数量。
+- 用于判断资料是否完整入库。
+
+`SqlTools.querySession(sessionId)`：
+
+- 查询学习会话、历史题目和来源。
+- 用于避免同一资料重复生成高度相似题目。
+
+`WebSearchTools.webSearch(query)`：
+
+- 当前已有联网搜索工具。
+- 仅在本地资料不足时调用。
 
 ## 题目来源
 
@@ -135,6 +175,8 @@ RAG 题：
 - `sourceUrl` 为网页链接
 - `evidence` 必须来自搜索结果
 
+同一批题目允许同时包含 RAG 题和联网题，但每道题必须独立标明来源。
+
 ## 校验
 
 - 资料为空拒绝上传。
@@ -146,6 +188,8 @@ RAG 题：
 - `confidence` 必须在 `0.6` 到 `1`。
 - RAG 题证据必须能在资料文本中匹配到。
 - 联网题必须有有效 URL。
+- Agent 必须至少调用一次向量检索工具。
+- Agent 只有在向量检索证据不足时才能调用联网搜索。
 - 校验失败自动重试一次。
 
 ## 验收
@@ -153,7 +197,7 @@ RAG 题：
 - 用户能从首页进入资料上传页面。
 - 用户能上传 TXT/PDF/DOCX 或输入文本资料。
 - 后端能解析资料并写入 pgvector。
-- 生成题目时能优先检索资料。
-- AI 能在 RAG 和联网搜索之间自动判断。
+- 生成题目时 Agent 必须先调用向量检索。
+- Agent 能在向量检索、SQL 查询、联网搜索之间自动判断。
 - 题目解析页能展示“题库”或“联网”来源。
 - RAG 证据不足时不会编造题目。
