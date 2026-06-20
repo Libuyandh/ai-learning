@@ -15,6 +15,7 @@ public class Question {
     private String explanation;
     private String knowledgePoint;
     private String difficulty;
+    private String sourceType;
     private String sourceUrl;
     private String evidenceText;
     private Double confidence;
@@ -39,6 +40,8 @@ public class Question {
     public void setKnowledgePoint(String knowledgePoint) { this.knowledgePoint = knowledgePoint; }
     public String getDifficulty() { return difficulty; }
     public void setDifficulty(String difficulty) { this.difficulty = difficulty; }
+    public String getSourceType() { return sourceType; }
+    public void setSourceType(String sourceType) { this.sourceType = sourceType; }
     public String getSourceUrl() { return sourceUrl; }
     public void setSourceUrl(String sourceUrl) { this.sourceUrl = sourceUrl; }
     public String getEvidenceText() { return evidenceText; }

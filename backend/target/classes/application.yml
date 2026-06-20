@@ -25,3 +25,12 @@ search:
   max-results: 5
   max-content-length: 12000
   api-key: ${FIRECRAWL_API_KEY:}
+
+rag:
+  provider: pgvector
+  pgvector:
+    dimensions: 1024
+    datasource:
+      url: jdbc:postgresql://localhost:5432/ai_learning_vector
+      username: postgres
+      password: 123456

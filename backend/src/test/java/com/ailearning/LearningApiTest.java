@@ -1,6 +1,7 @@
 package com.ailearning;
 
 import com.ailearning.search.MockWebSearchClient;
+import com.ailearning.rag.RagTools;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -26,6 +27,9 @@ class LearningApiTest {
 
     @Autowired
     MockWebSearchClient webSearchClient;
+
+    @Autowired
+    RagTools ragTools;
 
     @Test
     void createSessionRejectsBlankText() throws Exception {
@@ -135,5 +139,35 @@ class LearningApiTest {
         mockMvc.perform(post("/api/learning/sessions/" + sessionId + "/questions"))
                 .andExpect(status().isBadGateway())
                 .andExpect(jsonPath("$.code").value("AI_GENERATION_FAILED"));
+    }
+
+    @Test
+    void uploadsMaterialAndUsesRagBeforeWebSearch() throws Exception {
+        int ragCallsBefore = ragTools.callCount();
+        int webCallsBefore = webSearchClient.callCount();
+
+        mockMvc.perform(post("/api/materials/text")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\":\"光合作用资料\",\"content\":\"光合作用是绿色植物利用光能合成有机物并释放氧气的过程。\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.materialId").isNumber())
+                .andExpect(jsonPath("$.data.status").value("READY"))
+                .andExpect(jsonPath("$.data.chunkCount").value(1));
+
+        String createResponse = mockMvc.perform(post("/api/learning/sessions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"inputType\":\"text\",\"content\":\"光合作用\"}"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        long sessionId = JsonTestUtils.longAt(createResponse, "/data/sessionId");
+
+        mockMvc.perform(post("/api/learning/sessions/" + sessionId + "/questions"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.questions[0].sourceType").value("rag"))
+                .andExpect(jsonPath("$.data.questions[0].sourceUrl").value(org.hamcrest.Matchers.startsWith("rag://material/")))
+                .andExpect(jsonPath("$.data.questions[0].evidence").value(org.hamcrest.Matchers.containsString("光合作用")));
+
+        org.junit.jupiter.api.Assertions.assertEquals(ragCallsBefore + 1, ragTools.callCount());
+        org.junit.jupiter.api.Assertions.assertEquals(webCallsBefore, webSearchClient.callCount());
     }
 }

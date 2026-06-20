@@ -18,6 +18,7 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
  * mapper 只能被 service/mapper 访问
  * ai 只能被 service/ai 访问
  * search 只能被 ai/search 访问
+ * rag 只能被 service/ai/rag 访问
  *
  * 反向依赖禁止：domain、dto 不允许依赖 controller/service/mapper/ai/search/config
  * mapper 不允许依赖 controller/service/ai/search
@@ -40,11 +41,13 @@ class ArchitectureTest {
             .layer("Mapper").definedBy("..mapper..")
             .layer("Ai").definedBy("..ai..")
             .layer("Search").definedBy("..search..")
+            .layer("Rag").definedBy("..rag..")
             .whereLayer("Controller").mayNotBeAccessedByAnyLayer()
             .whereLayer("Service").mayOnlyBeAccessedByLayers("Controller", "Service")
             .whereLayer("Mapper").mayOnlyBeAccessedByLayers("Service", "Mapper")
             .whereLayer("Ai").mayOnlyBeAccessedByLayers("Service", "Ai")
-            .whereLayer("Search").mayOnlyBeAccessedByLayers("Ai", "Search");
+            .whereLayer("Search").mayOnlyBeAccessedByLayers("Ai", "Search")
+            .whereLayer("Rag").mayOnlyBeAccessedByLayers("Service", "Ai", "Rag");
 
     @ArchTest
     static final ArchRule domain_should_not_depend_on_application_or_infrastructure_packages = noClasses()
@@ -55,6 +58,7 @@ class ArchitectureTest {
                     "..mapper..",
                     "..ai..",
                     "..search..",
+                    "..rag..",
                     "..config.."
             );
 
@@ -65,7 +69,8 @@ class ArchitectureTest {
                     "..controller..",
                     "..service..",
                     "..ai..",
-                    "..search.."
+                    "..search..",
+                    "..rag.."
             );
 
     @ArchTest

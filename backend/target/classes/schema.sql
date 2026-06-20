@@ -21,6 +21,24 @@ CREATE TABLE IF NOT EXISTS source_material (
   created_at DATETIME NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS material (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  title VARCHAR(255) NOT NULL,
+  type VARCHAR(32) NOT NULL,
+  file_name VARCHAR(255) NULL,
+  status VARCHAR(32) NOT NULL,
+  chunk_count INT NOT NULL DEFAULT 0,
+  created_at DATETIME NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS material_chunk (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  material_id BIGINT NOT NULL,
+  chunk_index INT NOT NULL,
+  content LONGTEXT NOT NULL,
+  created_at DATETIME NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS question (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
   session_id BIGINT NOT NULL,
@@ -31,6 +49,7 @@ CREATE TABLE IF NOT EXISTS question (
   explanation TEXT NOT NULL,
   knowledge_point VARCHAR(255) NOT NULL,
   difficulty VARCHAR(32) NOT NULL,
+  source_type VARCHAR(32) NOT NULL,
   source_url VARCHAR(1024) NOT NULL,
   evidence_text TEXT NOT NULL,
   confidence DECIMAL(4,3) NOT NULL,

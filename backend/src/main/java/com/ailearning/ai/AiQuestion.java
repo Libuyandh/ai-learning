@@ -10,6 +10,7 @@ public record AiQuestion(
         String explanation,
         String knowledgePoint,
         String difficulty,
+        String sourceType,
         String sourceUrl,
         String evidence,
         Double confidence

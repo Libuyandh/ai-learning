@@ -69,11 +69,56 @@ export type Report = {
   }>
 }
 
+export type MaterialResult = {
+  materialId: number
+  title: string
+  type: string
+  status: string
+  chunkCount: number
+}
+
 export async function createSession(content: string) {
   return request<{ sessionId: number; status: string }>('/api/learning/sessions', 'POST', {
     inputType: 'text',
     content
   })
+}
+
+export async function createTextMaterial(title: string, content: string) {
+  return request<MaterialResult>('/api/materials/text', 'POST', {
+    title,
+    content
+  })
+}
+
+export async function uploadMaterialFile(filePath: string | File, title = '') {
+  if (process.env.TARO_ENV === 'h5' && filePath instanceof File) {
+    const formData = new FormData()
+    formData.append('file', filePath)
+    formData.append('title', title)
+    const res = await fetch(`${BASE_URL}/api/materials/files`, {
+      method: 'POST',
+      body: formData
+    })
+    const data = await res.json() as ApiResponse<MaterialResult>
+    if (!res.ok || data.code !== 'OK') {
+      throw new Error(data?.message || '涓婁紶澶辫触')
+    }
+    return data.data
+  }
+
+  const res = await Taro.uploadFile({
+    url: `${BASE_URL}/api/materials/files`,
+    filePath: filePath as string,
+    name: 'file',
+    formData: { title }
+  })
+
+  const data = typeof res.data === 'string' ? JSON.parse(res.data) as ApiResponse<MaterialResult> : res.data
+  if (res.statusCode < 200 || res.statusCode >= 300 || data.code !== 'OK') {
+    throw new Error(data?.message || '上传失败')
+  }
+  return data.data
 }
 
 export async function generateQuestions(sessionId: number) {

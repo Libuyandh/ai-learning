@@ -121,6 +121,7 @@ export default function Index () {
                 <View className='mini-card'><Text className='muted'>模式</Text><Text className='b'>闯关</Text></View>
               </View>
               <View className='bottom'><Button className='primary-btn' onClick={start}>开始生成闯关</Button></View>
+              <Button className='ghost-btn upload-entry' onClick={() => Taro.navigateTo({ url: '/pages/material/index' })}>上传学习资料</Button>
             </>
           )}
 
