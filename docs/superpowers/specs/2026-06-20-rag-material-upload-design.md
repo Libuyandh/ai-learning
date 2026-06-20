@@ -2,7 +2,7 @@
 
 ## 目标
 
-新增独立资料上传页面，支持用户导入学习资料生成题目。资料进入后端后完成文本解析、切分、向量化并写入 PostgreSQL pgvector。出题采用 Agentic RAG 模式，由 AI Agent 先尝试向量检索，再按需调用联网搜索工具，信息足够才生成题目，证据不足时拒绝生成题目。
+新增独立资料上传页面，支持用户导入学习资料作为出题参考。资料上传只负责解析、切分、向量化并写入 PostgreSQL pgvector，不直接生成题目。出题在学习会话中独立发起，由 AI Agent 按需检索已上传资料，再按需调用联网搜索工具，信息足够才生成题目，证据不足时拒绝生成题目。
 
 ## 页面
 
@@ -14,7 +14,7 @@
 - 说明区：标题“导入资料生成题目”，说明首版支持文本和文件，网页与视频仅展示禁用入口。
 - 来源卡片：文本、网页、文件、视频。
 - 上传区：支持 PDF、DOCX、TXT，单个文件不超过 10MB。
-- 底部按钮：解析并生成。
+- 底部按钮：上传资料。
 
 首版行为：
 
@@ -23,6 +23,8 @@
 - 网页：禁用入口，不进入解析流程。
 - 视频：禁用入口，不进入解析流程。
 
+出题入口保留在学习首页。用户输入出题主题后，后端自动把已上传资料作为参考来源之一。
+
 ## 接口
 
 新增资料接口：
@@ -30,16 +32,24 @@
 ```http
 POST /api/materials/text
 POST /api/materials/files
-POST /api/materials/{materialId}/questions
 ```
 
-`POST /api/materials/text` 接收资料文本和出题要求。
+`POST /api/materials/text` 接收资料文本。
 
-`POST /api/materials/files` 接收文件和出题要求，后端解析文件文本。
+`POST /api/materials/files` 接收文件，后端解析文件文本。
 
-`POST /api/materials/{materialId}/questions` 触发 Agentic RAG 工具编排和题目生成。
+资料接口只负责资料入库，不生成题目。
 
-原学习会话接口保留，用于普通文本主题直接出题。
+出题接口保留：
+
+```http
+POST /api/learning/sessions
+POST /api/learning/sessions/{sessionId}/questions
+```
+
+`POST /api/learning/sessions` 接收出题主题。
+
+`POST /api/learning/sessions/{sessionId}/questions` 触发 Agentic RAG 工具编排和题目生成。
 
 ## 存储
 
@@ -101,7 +111,7 @@ Embedding
 写入 PostgreSQL pgvector
   |
   v
-用户点击解析并生成
+用户在学习首页输入出题主题
   |
   v
 QuestionAgent 接收出题任务
@@ -128,9 +138,9 @@ Agent 决策规则：
 
 ## 工具集
 
-`RagTools.vectorSearch(query, materialId, topK)`：
+`RagTools.vectorSearch(query, topK)`：
 
-- 从 pgvector 检索资料分片。
+- 从已上传资料的 pgvector 分片中检索。
 - 返回分片内容、相似度、分片序号、资料 ID。
 
 `WebSearchTools.webSearch(query)`：
@@ -150,7 +160,7 @@ Agent 决策规则：
 RAG 题：
 
 - `sourceType = rag`
-- `sourceUrl = rag://material/{materialId}`
+- `sourceUrl = rag://material/{materialId}/chunk/{chunkIndex}`
 - `evidence` 必须来自资料分片原文
 
 联网题：
@@ -180,7 +190,9 @@ RAG 题：
 
 - 用户能从首页进入资料上传页面。
 - 用户能上传 TXT/PDF/DOCX 或输入文本资料。
+- 上传资料后不会自动生成题目。
 - 后端能解析资料并写入 pgvector。
+- 用户能回到学习首页独立输入出题主题。
 - 生成题目时 Agent 必须先调用向量检索。
 - Agent 能在向量检索和联网搜索之间自动判断。
 - 题目解析页能展示“题库”或“联网”来源。
