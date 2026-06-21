@@ -8,6 +8,7 @@ D:\AI-coding\ai-learning\backend\src\main\java\com\ailearning\AiLearningApplicat
 D:\AI-coding\ai-learning\backend\src\main\java\com\ailearning\common\ApiResponse.java
 D:\AI-coding\ai-learning\backend\src\main\java\com\ailearning\common\BusinessException.java
 D:\AI-coding\ai-learning\backend\src\main\java\com\ailearning\common\GlobalExceptionHandler.java
+D:\AI-coding\ai-learning\backend\src\main\java\com\ailearning\config\ChunkingProperties.java
 D:\AI-coding\ai-learning\backend\src\main\java\com\ailearning\config\CorsConfig.java
 D:\AI-coding\ai-learning\backend\src\main\java\com\ailearning\config\DataSourceConfig.java
 D:\AI-coding\ai-learning\backend\src\main\java\com\ailearning\config\PgVectorConfig.java
@@ -56,3 +57,5 @@ D:\AI-coding\ai-learning\backend\src\main\java\com\ailearning\service\KeywordRag
 D:\AI-coding\ai-learning\backend\src\main\java\com\ailearning\service\LearningService.java
 D:\AI-coding\ai-learning\backend\src\main\java\com\ailearning\service\MaterialService.java
 D:\AI-coding\ai-learning\backend\src\main\java\com\ailearning\service\PgVectorRagStoreService.java
+D:\AI-coding\ai-learning\backend\src\main\java\com\ailearning\service\StructureAwareChunkTransformer.java
+D:\AI-coding\ai-learning\backend\src\main\java\com\ailearning\service\TextCleaner.java

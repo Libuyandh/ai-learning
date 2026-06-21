@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: com.ailearning.LearningApiTest
 -------------------------------------------------------------------------------
-Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 13.52 s -- in com.ailearning.LearningApiTest
+Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 28.67 s -- in com.ailearning.LearningApiTest

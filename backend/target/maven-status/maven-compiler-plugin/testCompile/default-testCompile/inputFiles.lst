@@ -1,3 +1,5 @@
 D:\AI-coding\ai-learning\backend\src\test\java\com\ailearning\ArchitectureTest.java
 D:\AI-coding\ai-learning\backend\src\test\java\com\ailearning\JsonTestUtils.java
 D:\AI-coding\ai-learning\backend\src\test\java\com\ailearning\LearningApiTest.java
+D:\AI-coding\ai-learning\backend\src\test\java\com\ailearning\service\StructureAwareChunkTransformerTest.java
+D:\AI-coding\ai-learning\backend\src\test\java\com\ailearning\service\TextCleanerTest.java

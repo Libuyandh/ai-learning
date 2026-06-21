@@ -6,7 +6,6 @@ import com.ailearning.dto.MaterialResponse;
 import com.ailearning.mapper.MaterialMapper;
 import com.ailearning.rag.RagStore;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -20,11 +19,15 @@ public class MaterialService {
     private final MaterialMapper materialMapper;
     private final RagStore ragStore;
     private final DocumentParser documentParser;
+    private final TextCleaner textCleaner;
+    private final StructureAwareChunkTransformer chunkTransformer;
 
-    public MaterialService(MaterialMapper materialMapper, RagStore ragStore, DocumentParser documentParser) {
+    public MaterialService(MaterialMapper materialMapper, RagStore ragStore, DocumentParser documentParser, TextCleaner textCleaner, StructureAwareChunkTransformer chunkTransformer) {
         this.materialMapper = materialMapper;
         this.ragStore = ragStore;
         this.documentParser = documentParser;
+        this.textCleaner = textCleaner;
+        this.chunkTransformer = chunkTransformer;
     }
 
     @Transactional
@@ -52,7 +55,10 @@ public class MaterialService {
     }
 
     private MaterialResponse save(String title, String type, String fileName, String text) {
-        List<String> chunks = split(text);
+        List<String> chunks = chunkTransformer.transform(textCleaner.clean(text));
+        if (chunks.isEmpty()) {
+            throw new BusinessException("MATERIAL_PARSE_FAILED", "资料解析为空", HttpStatus.BAD_REQUEST);
+        }
         Material material = new Material();
         material.setTitle(StringUtils.hasText(title) ? title.trim() : "未命名资料");
         material.setType(type);
@@ -63,26 +69,5 @@ public class MaterialService {
         materialMapper.insert(material);
         ragStore.add(material.getId(), chunks);
         return new MaterialResponse(material.getId(), material.getTitle(), material.getType(), material.getStatus(), material.getChunkCount());
-    }
-
-    private List<String> split(String text) {
-        String normalized = text.trim().replaceAll("\\r\\n?", "\n");
-        List<String> chunks = new ArrayList<>();
-        int size = 900;
-        int overlap = 120;
-        for (int start = 0; start < normalized.length(); start += size - overlap) {
-            int end = Math.min(start + size, normalized.length());
-            String chunk = normalized.substring(start, end).trim();
-            if (StringUtils.hasText(chunk)) {
-                chunks.add(chunk);
-            }
-            if (end == normalized.length()) {
-                break;
-            }
-        }
-        if (chunks.isEmpty()) {
-            throw new BusinessException("MATERIAL_PARSE_FAILED", "资料解析为空", HttpStatus.BAD_REQUEST);
-        }
-        return chunks;
     }
 }
