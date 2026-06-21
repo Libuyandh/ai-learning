@@ -6,10 +6,13 @@ import com.ailearning.rag.RagSearchResult;
 import com.ailearning.rag.RagTools;
 import com.ailearning.search.WebSearchResult;
 import com.ailearning.search.WebSearchTools;
+import com.alibaba.cloud.ai.graph.agent.ReactAgent;
+import com.alibaba.cloud.ai.graph.exception.GraphRunnerException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.converter.BeanOutputConverter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
@@ -33,8 +36,9 @@ public class DashScopeAiClient implements AiClient {
     public List<AiQuestion> generateQuestions(String content) {
         BeanOutputConverter<AiQuestionResponse> outputConverter = new BeanOutputConverter<>(AiQuestionResponse.class);
         Evidence evidence = evidence(content);
-        AiQuestionResponse response = chatClient.prompt()
-                .system("""
+        ReactAgent agent = ReactAgent.builder()
+                .chatClient(chatClient)
+                .instruction("""
                         你是严谨的出题老师。
                         只能基于用户上传资料或联网搜索结果出题，不允许使用未经资料支持的模型记忆。
                         每道题必须提供 sourceType（rag 或 web）、来源 URL、直接支持答案的证据片段和 0 到 1 的置信度。
@@ -43,13 +47,21 @@ public class DashScopeAiClient implements AiClient {
                         correctAnswer 必须存在于 options。
                         输出必须符合以下格式：
                         """ + outputConverter.getFormat())
-                .user("学习主题或材料：" + content + "\n可用证据：" + evidence.content())
-                .tools(ragTools, webSearchTools)
-                .call()
-                .entity(outputConverter);
+                .methodTools(ragTools, webSearchTools)
+                .build();
+        AssistantMessage message = callAgent(agent, content, evidence);
+        AiQuestionResponse response = outputConverter.convert(message.getText());
         return response == null || response.questions() == null ? List.of() : response.questions().stream()
                 .map(question -> fillEvidence(question, evidence))
                 .toList();
+    }
+
+    private AssistantMessage callAgent(ReactAgent agent, String content, Evidence evidence) {
+        try {
+            return agent.call("学习主题或材料：" + content + "\n可用证据：" + evidence.content());
+        } catch (GraphRunnerException exception) {
+            throw new IllegalStateException("AI 题目生成失败", exception);
+        }
     }
 
     @Override

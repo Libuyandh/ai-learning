@@ -18,7 +18,7 @@ export default function MaterialPage () {
     if (process.env.TARO_ENV === 'h5') {
       const input = document.createElement('input')
       input.type = 'file'
-      input.accept = '.pdf,.docx,.txt'
+      input.accept = '.pdf,.docx,.txt,.md,.markdown'
       input.onchange = () => {
         const file = input.files?.[0]
         if (!file) return
@@ -35,7 +35,7 @@ export default function MaterialPage () {
     const result = await Taro.chooseMessageFile({
       count: 1,
       type: 'file',
-      extension: ['pdf', 'docx', 'txt']
+      extension: ['pdf', 'docx', 'txt', 'md', 'markdown']
     })
     const file = result.tempFiles[0]
     if (!file) return
@@ -101,7 +101,7 @@ export default function MaterialPage () {
             </Button>
             <Button className={`source-card ${sourceType === 'file' ? 'active' : ''}`} onClick={() => setSourceType('file')}>
               <Text className='source-pill'>文件</Text>
-              <Text className='source-note'>PDF / DOCX / TXT</Text>
+              <Text className='source-note'>PDF / DOCX / TXT / MD</Text>
             </Button>
             <Button className='source-card disabled' onClick={() => setSourceType('video')}>
               <Text className='source-pill warn'>视频</Text>

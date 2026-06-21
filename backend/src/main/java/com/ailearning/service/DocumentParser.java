@@ -16,7 +16,7 @@ public class DocumentParser {
     public String parse(MultipartFile file) {
         String name = file.getOriginalFilename() == null ? "" : file.getOriginalFilename().toLowerCase();
         try {
-            if (name.endsWith(".txt")) {
+            if (name.endsWith(".txt") || name.endsWith(".md") || name.endsWith(".markdown")) {
                 return new String(file.getBytes());
             }
             if (name.endsWith(".pdf")) {
@@ -32,6 +32,6 @@ public class DocumentParser {
         } catch (IOException exception) {
             throw new BusinessException("MATERIAL_PARSE_FAILED", "资料解析失败", HttpStatus.BAD_REQUEST);
         }
-        throw new BusinessException("UNSUPPORTED_FILE", "仅支持 PDF、DOCX、TXT", HttpStatus.BAD_REQUEST);
+        throw new BusinessException("UNSUPPORTED_FILE", "仅支持 PDF、DOCX、TXT、MD", HttpStatus.BAD_REQUEST);
     }
 }
